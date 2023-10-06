@@ -10,4 +10,6 @@ class Marca extends Model
     use HasFactory;
 
     protected $primaryKey = 'id_mar';
+
+    protected $fillable = ['nome_mar', 'imagem_mar'];
 }

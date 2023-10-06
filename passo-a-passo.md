@@ -13,3 +13,5 @@ php artisan make:model -mcr Carro
 php artisan make:model --all Cliente
 
 # Implementar migrations, lembrando sempre dos nomes de tabelas e chaves
+
+# É importante mapear todas apiResources para que ele identifique automaticamente
