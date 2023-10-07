@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use App\Models\Marca;
 use Illuminate\Http\Request;
 
@@ -33,7 +34,16 @@ class MarcaController extends Controller
      */
     public function store(Request $request)
     {
-        $marca = $this->marca->create($request->all());
+        $request->validate($this->marca->rules(), $this->marca->feedback());
+
+        $imagem = $request->file('imagem_mar');
+        $imagem_urn = $imagem->store('imagens', 'public');
+
+        $marca = $this->marca->create([
+            'nome_mar' => $request->nome_mar,
+            'imagem_mar' => $imagem_urn,
+        ]);
+
         return response()->json($marca, 201);
     }
 
@@ -70,7 +80,33 @@ class MarcaController extends Controller
             return response()->json(['erro' => 'Impossível realizar a atualização, o recurso solicitado não existe'], 404);
         }
 
-        $marca->update($request->all());
+        if ($request->method() === 'PATCH') {
+            $regrasDinamicas = array();
+
+            foreach ($marca->rules() as $input => $regra) {
+                if (array_key_exists($input, $request->all())) {
+                    $regrasDinamicas[$input] = $regra;
+                }
+            }
+
+            $request->validate($regrasDinamicas, $marca->feedback());
+
+        } else {
+            $request->validate($marca->rules(), $marca->feedback());
+        }
+
+        if ($request->file('imagem_mar')) {
+            Storage::disk('public')->delete($marca->imagem_mar);
+        }
+
+        $imagem = $request->file('imagem_mar');
+        $imagem_urn = $imagem->store('imagens', 'public');
+
+        $marca->update([
+            'nome_mar' => $request->nome_mar,
+            'imagem_mar' => $imagem_urn,
+        ]);
+
         return response()->json($marca, 200);
     }
 
@@ -84,6 +120,8 @@ class MarcaController extends Controller
         if ($marca === null) {
             return response()->json(['erro' => 'Impossível realizar a exclusão, o recurso solicitado não existe'], 404);
         }
+
+        Storage::disk('public')->delete($marca->imagem_mar);
 
         $marca->delete();
         return response()->json(['msg' => 'A marca foi removida com sucesso'], 200);
