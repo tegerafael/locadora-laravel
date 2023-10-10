@@ -27,4 +27,9 @@ class Modelo extends Model
     }
 
     // mensagens de feedback
+
+    public function marca()
+    {
+        return $this->belongsTo(Marca::class, 'id_mar_fk');
+    }
 }

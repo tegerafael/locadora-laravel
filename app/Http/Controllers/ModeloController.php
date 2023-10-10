@@ -15,9 +15,16 @@ class ModeloController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $modelos = $this->modelo->all();
+        $modelos = array();
+
+        if ($request->has('atributos')) {
+            $atributos = $request->atributos;
+            $modelos = $this->modelo->selectRaw($atributos)->with('marca')->get();
+        } else {
+            $modelos = $this->modelo->with('marca')->get();
+        }
         return response()->json($modelos, 200);
     }
 
@@ -36,8 +43,8 @@ class ModeloController extends Controller
     {
         $request->validate($this->modelo->rules());
 
-        $imagem = $request->file('imagem_mod');
-        $imagem_urn = $imagem->store('imagens/modelos', 'public');
+        $imagem_mod = $request->file('imagem_mod');
+        $imagem_urn = $imagem_mod->store('imagens/modelos', 'public');
 
         $modelo = $this->modelo->create([
             'nome_mod' => $request->nome_mod,
@@ -57,7 +64,7 @@ class ModeloController extends Controller
      */
     public function show($id)
     {
-        $modelo = $this->modelo->find($id);
+        $modelo = $this->modelo->with('marca')->find($id);
 
         if ($modelo === null) {
             return response()->json(['erro' => 'Recurso pesquisado não existe'], 404);
@@ -104,18 +111,12 @@ class ModeloController extends Controller
             Storage::disk('public')->delete($modelo->imagem_mod);
         }
 
-        $imagem = $request->file('imagem_mod');
-        $imagem_urn = $imagem->store('imagens/modelos', 'public');
+        $imagem_mod = $request->file('imagem_mod');
+        $imagem_urn = $imagem_mod->store('imagens/modelos', 'public');
 
-        $modelo->update([
-            'nome_mod' => $request->nome_mod,
-            'imagem_mod' => $imagem_urn,
-            'numero_portas_mod' => $request->numero_portas_mod,
-            'lugares_mod' => $request->lugares_mod,
-            'air_bag_mod' => $request->air_bag_mod,
-            'abs_mod' => $request->abs_mod,
-            'id_mar_fk' => $request->id_mar_fk
-        ]);
+        $modelo->fill($request->all());
+        $modelo->imagem_mod = $imagem_urn;
+        $modelo->save();
 
         return response()->json($modelo, 200);
     }
