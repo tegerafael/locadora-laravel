@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('locacoes', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_loc');
             $table->dateTime('data_inicio_periodo_loc');
             $table->dateTime('data_final_previsto_periodo_loc');
             $table->dateTime('data_final_realizado_periodo_loc');
